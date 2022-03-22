@@ -86,9 +86,10 @@ def post_edit(request, post_id):
     post.save()
     return redirect('posts:post_detail', post_id=post.id)
 
+
 @login_required
 def add_comment(request, post_id):
-    post = get_object_or_404(Post, id=post_id) 
+    post = get_object_or_404(Post, id=post_id)
     form = CommentForm(request.POST or None)
     if form.is_valid():
         comment = form.save(commit=False)
@@ -96,6 +97,7 @@ def add_comment(request, post_id):
         comment.post = post
         comment.save()
     return redirect('posts:post_detail', post_id=post_id)
+
 
 @login_required
 def follow_index(request):
@@ -111,15 +113,18 @@ def follow_index(request):
     }
     return render(request, 'posts/follow.html', context)
 
+
 @login_required
 def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
-    already_followed = Follow.objects.filter(user=request.user, author=author).exists()
+    already_followed = Follow.objects.filter(
+        user=request.user, author=author).exists()
     if request.user.username == username:
         return redirect('posts:profile', username=username)
     if not already_followed:
         Follow.objects.get_or_create(user=request.user, author=author)
     return redirect('posts:profile', username=username)
+
 
 @login_required
 def profile_unfollow(request, username):

@@ -88,7 +88,7 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ('-pub_date',)
-    
+
     def __str__(self):
         return self.title
 
@@ -106,6 +106,6 @@ class Follow(models.Model):
         on_delete=models.CASCADE,
         related_name='follower',
     )
-    
+
     def __str__(self):
         return self.title
