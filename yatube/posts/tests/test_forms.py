@@ -1,8 +1,9 @@
+from cgitb import text
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from posts.models import Post, Group, User
-from posts.forms import PostForm
+from posts.models import Post, Group, User, Comment
+from posts.forms import PostForm, CommentForm
 
 
 class PostFormTest(TestCase):
