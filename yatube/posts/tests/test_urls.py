@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from http import HTTPStatus
 
-from posts.models import Post, Group
+from posts.models import Post, Group, Follow
 
 User = get_user_model()
 
@@ -20,6 +20,10 @@ class YatubeURLTests(TestCase):
         cls.post = Post.objects.create(
             text='Тестовый пост',
             author=cls.user,
+        )
+        cls.follow = Follow.objects.create(
+            user=cls.user,
+            author=cls.post.author,
         )
 
     def setUp(self):
@@ -45,7 +49,7 @@ class YatubeURLTests(TestCase):
             '/',
             f'/group/{self.group.slug}/',
             f'/posts/{self.post.id}/',
-            '/create/'
+            '/create/',
         ]
         for url in urls_list:
             response = self.authorized_client.get(url)
@@ -58,6 +62,32 @@ class YatubeURLTests(TestCase):
         response = self.guest_client.get('/create/', follow=True)
         self.assertRedirects(
             response, '/auth/login/?next=/create/')
+
+    def test_urls_redirect_profile_follow(self):
+        """
+        Страница profile_follow перенаправит авторизованного
+        пользователя на страницу автора.
+        """
+        response = self.authorized_client.get(
+            f'/profile/{self.user.username}/follow/',
+            follow=True
+        )
+        self.assertRedirects(
+            response, f'/profile/{self.user.username}/'
+        )
+
+    def test_urls_redirect_add_comment(self):
+        """
+        Страница add_comment перенаправит авторизованного
+        пользователя на страницу поста.
+        """
+        response = self.authorized_client.get(
+            f'/posts/{self.post.id}/comment/',
+            follow=True
+        )
+        self.assertRedirects(
+            response, f'/posts/{self.post.id}/'
+        )
 
     def test_404_error(self):
         """Ошибка 404 для несуществующей страницы."""
@@ -74,6 +104,7 @@ class YatubeURLTests(TestCase):
             f'/posts/{self.post.id}/': 'posts/post_detail.html',
             f'/posts/{self.post.id}/edit/': 'posts/create_post.html',
             '/create/': 'posts/create_post.html',
+            '/follow/': 'posts/follow.html',
         }
         for url, template in templates_url_names.items():
             with self.subTest(url=url):

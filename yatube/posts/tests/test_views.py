@@ -3,7 +3,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django import forms
 
-from posts.models import Post, Group
+from posts.models import Post, Group, Comment, Follow
 
 
 User = get_user_model()
@@ -108,6 +108,51 @@ class YatubeViewsTests(TestCase):
             with self.subTest(value=value):
                 form_field = response.context.get('form').fields.get(value)
                 self.assertIsInstance(form_field, expected)
+
+    def test_add_comment(self):
+        """Проверка добавления комментария зарегистрированным пользователем."""
+        post_id = YatubeViewsTests.post.id
+        form_data = {'text': 'очень занимательно'}
+        self.authorized_client.post(
+            reverse('posts:add_comment', args=[post_id]),
+            data=form_data,
+            follow=True,
+        )
+        comment = (Comment.objects.filter(author=self.user).last())
+        self.assertEqual(form_data['text'], comment.text)
+        self.assertEqual(str(comment.author), f'{self.user}')
+        self.assertEqual(post_id, comment.post.id)
+
+    def test_follow_unfollow(self):
+        """
+        Проверка подписки зарегистрированным пользователем
+        на автора и удаления его из подписок.
+        """
+        counter_before = Follow.objects.all().filter(
+            author_id=self.post.author.id).count()
+        self.authorized_client.get(reverse(
+            'posts:profile_follow', args=[self.post.author]))
+        counter_after_sub = Follow.objects.all().filter(
+            author_id=self.post.author.id).count()
+        self.assertEqual(counter_after_sub, counter_before + 1)
+        self.authorized_client.get(reverse(
+            'posts:profile_unfollow', args=[self.post.author]))
+        counter_after_unsub = Follow.objects.all().filter(
+            author_id=self.post.author.id).count()
+        self.assertEqual(counter_after_unsub, counter_before)
+
+    def test_profile_follow_works_correct(self):
+        """Проверка корректности появления статей избранных авторов."""
+        response_before_sub = self.authorized_client.get(
+            reverse('posts:follow_index'))
+        self.authorized_client.get(
+            reverse('posts:profile_follow', args=[self.post.author]))
+        response_after_sub = self.authorized_client.get(
+            reverse('posts:follow_index'))
+        self.assertNotEqual(
+            response_before_sub.context['page_obj'],
+            response_after_sub.context['page_obj']
+        )
 
 
 class PaginatorViewsTests(TestCase):
