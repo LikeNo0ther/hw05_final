@@ -36,7 +36,7 @@ class Post(models.Model):
 
     class Meta:
         ordering = ('-pub_date',)
-        verbose_name_plural = 'Пост'
+        verbose_name = 'Пост'
         verbose_name_plural = 'Посты'
 
     def __str__(self):
@@ -60,7 +60,7 @@ class Group(models.Model):
     )
 
     class Meta:
-        verbose_name_plural = 'Группа'
+        verbose_name = 'Группа'
         verbose_name_plural = 'Группы'
 
     def __str__(self):
@@ -95,7 +95,7 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ('-pub_date',)
-        verbose_name_plural = 'Комментарий'
+        verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
@@ -117,11 +117,13 @@ class Follow(models.Model):
     )
 
     class Meta:
-        models.UniqueConstraint(
-            fields=['author', 'user'],
-            name='unique_following'
-        )
-        verbose_name_plural = 'Подписка'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('author', 'user'),
+                name='unique_following'
+            )
+        ]
+        verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
 
     def __str__(self):

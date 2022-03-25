@@ -123,10 +123,10 @@ class YatubeViewsTests(TestCase):
         self.assertEqual(str(comment.author), f'{self.user}')
         self.assertEqual(post_id, comment.post.id)
 
-    def test_follow_unfollow(self):
+    def test_follow(self):
         """
         Проверка подписки зарегистрированным пользователем
-        на автора и удаления его из подписок.
+        на автора.
         """
         counter_before = Follow.objects.all().filter(
             author_id=self.post.author.id).count()
@@ -135,6 +135,16 @@ class YatubeViewsTests(TestCase):
         counter_after_sub = Follow.objects.all().filter(
             author_id=self.post.author.id).count()
         self.assertEqual(counter_after_sub, counter_before + 1)
+
+    def test_unfollow(self):
+        """
+        Проверка отписки зарегистрированным пользователем
+        от автора.
+        """
+        counter_before = Follow.objects.all().filter(
+            author_id=self.post.author.id).count()
+        self.authorized_client.get(reverse(
+            'posts:profile_follow', args=[self.post.author]))
         self.authorized_client.get(reverse(
             'posts:profile_unfollow', args=[self.post.author]))
         counter_after_unsub = Follow.objects.all().filter(
